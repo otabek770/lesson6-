@@ -3,10 +3,15 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import Login from './component/Login'
 import Navbar from './component/Navbar'
-import { getStore } from './component/main'
+import { getStore,getUser } from './component/main'
 import { uid } from 'uid'
 import Products from './component/Products'
 import Add from './component/Add'
+import { Route, Routes } from 'react-router-dom'
+import Home from './pages/Home'
+import About from './pages/About'
+import Service from './pages/Service'
+import ProtectedRoute from './component/ProtectedRoute'
 
 function App() {
 
@@ -23,12 +28,12 @@ const [editId,setEditId] = useState (null);
 
 const [edit,setEdit] = useState (false);
 
-const [ users,setUsers] = useState(getStore('users'));
+const [ user,setUser] = useState(getUser('user'));
 const [ products,setProducts] = useState(getStore('products'));
 
 const handleSubmit = () => {
   const newUser = {id:id,uname:name,uemai:email};
-  setUsers(newUser);
+  setUser(newUser);
 }
 
 const addProduct = () => {
@@ -62,25 +67,55 @@ const editItem = (id) => {
 
 
   useEffect(() => {
-    localStorage.setItem('users',JSON.stringify(users));
+    localStorage.setItem('user',JSON.stringify(user));
     localStorage.setItem('products',JSON.stringify(products));
    
-  },[users,products])
+  },[user,products])
 
 
   return (
     <>
-      <h2 className='title'>{users.uname && "Welcome  "}{users.uname}</h2>
+      <h2 className='title'>{user.uname && "Welcome to "}{user.uname}</h2>
       <Navbar login={login} setLogin={setLogin}/>
-      {login && <Login
+      
+      <Routes>
+
+
+     <Route path='login' element={login && <Login
       name={name}
       setName={setName}
       email={email}
       setEmail={setEmail}
       handleSubmit={handleSubmit}
       />}
-      <Products editItem={editItem} setEdit={setEdit} products={products} deleteItem={deleteItem}/>
-      <Add editItem={editItem} edit={edit} setEdit={setEdit} pname={pname} setPname={setPname} price={price} setPrice={setPrice} addProduct={addProduct}/>
+      />
+      <Route path='/' element={<Home/>} />
+      <Route path='/about' element={<About/>} />
+      <Route path='/service' element={<Service/>} />
+      <Route path='/products' element={
+      <ProtectedRoute user={user}> 
+          <Products
+       editItem={editItem} 
+       setEdit={setEdit} 
+       products={products} 
+       deleteItem={deleteItem}
+       />
+        </ProtectedRoute>} />
+      
+        <Route path='/Add' element={<Add 
+            editItem={editItem}
+            edit={edit}
+            setEdit={setEdit} 
+            pname={pname} 
+            setPname={setPname}
+            price={price}
+            setPrice={setPrice} 
+            addProduct={addProduct}
+            />
+          } 
+            />
+          <Route path='*' element={<Error/>} />
+      </Routes>
       
     </>
   )
